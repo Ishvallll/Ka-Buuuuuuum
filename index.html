@@ -1,45 +1,90 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>BOOM</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #0444BC;
-      overflow: hidden;
-      cursor: crosshair;
-    }
+<meta charset="UTF-8">
+<title>BOOM</title>
 
-    .boom {
-      position: absolute;
-      pointer-events: none;
-      transform: translate(-50%, -50%);
-    }
-  </style>
+<style>
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0444BC;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+
+  .boom {
+    position: absolute;
+    pointer-events: none;
+    width: 160px; /* TAMANHO MAIOR */
+    height: auto;
+    transform: translate(-50%, -50%);
+  }
+
+  /* TREMIDA */
+  .shake {
+    animation: shake 0.15s;
+  }
+
+  @keyframes shake {
+    0%   { transform: translate(0, 0); }
+    25%  { transform: translate(-6px, 4px); }
+    50%  { transform: translate(6px, -4px); }
+    75%  { transform: translate(-4px, -6px); }
+    100% { transform: translate(0, 0); }
+  }
+</style>
 </head>
+
 <body>
 
 <script>
-  document.addEventListener("click", (e) => {
+  const GIF_DURATION = 1000; // ms
+  const DRAG_DELAY = 50; // 0.05s
+  let mouseDown = false;
+  let lastSpawn = 0;
+
+  function spawnBoom(x, y) {
     const img = document.createElement("img");
-    img.src = "boom.gif";
+
+    // cache-busting pra não pular frames
+    img.src = "boom.gif?t=" + Date.now() + Math.random();
     img.className = "boom";
 
-    img.style.left = e.clientX + "px";
-    img.style.top = e.clientY + "px";
+    img.style.left = x + "px";
+    img.style.top = y + "px";
 
     document.body.appendChild(img);
 
-    // tempo médio de um gif de explosão (ajusta se quiser)
-    const gifDuration = 850; // 1 segundo
+    // tremida
+    document.body.classList.add("shake");
+    setTimeout(() => document.body.classList.remove("shake"), 150);
 
+    // remove depois que o gif acaba
     setTimeout(() => {
       img.remove();
-    }, gifDuration);
+    }, GIF_DURATION);
+  }
+
+  document.addEventListener("mousedown", (e) => {
+    mouseDown = true;
+    spawnBoom(e.clientX, e.clientY);
+    lastSpawn = Date.now();
+  });
+
+  document.addEventListener("mouseup", () => {
+    mouseDown = false;
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!mouseDown) return;
+
+    const now = Date.now();
+    if (now - lastSpawn >= DRAG_DELAY) {
+      spawnBoom(e.clientX, e.clientY);
+      lastSpawn = now;
+    }
   });
 </script>
 
